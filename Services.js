@@ -75,7 +75,7 @@ function categorizeEmailWithGemini(messageData, thread) {
       const labelObj = GmailApp.getUserLabelByName(primaryLabel);
       if (labelObj) {
         thread.addLabel(labelObj);
-        outcome.applied..push(primaryLabel);
+        outcome.applied.push(primaryLabel);
         setCache(cleanSender, subject, primaryLabel, reasoning);
       }
     }
