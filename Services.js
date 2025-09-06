@@ -36,6 +36,7 @@ function processSingleEmail(thread, state, rules) {
 
 function categorizeEmailWithGemini(message, thread) {
   let outcome = { applied: [], reasoning: "N/A" };
+  const GEMINI_API_KEY = getGeminiApiKey();
   if (GEMINI_API_KEY === "YOUR_GEMINI_API_KEY_HERE") {
     logInfo("Please set your API key in the 1_Config.gs file.");
     return outcome;

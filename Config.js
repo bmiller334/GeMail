@@ -5,7 +5,15 @@
 
 // --- SECRET KEYS & IDS ---
 // This section contains your private keys and unique identifiers.
-const GEMINI_API_KEY = "AIzaSyAxjMBn169oZQJ2MxLI3G9HO7LYFrU6Iac";
+function getGeminiApiKey() {
+  const userProperties = PropertiesService.getUserProperties();
+  const apiKey = userProperties.getProperty('GEMINI_API_KEY');
+  if (!apiKey) {
+    throw new Error('GEMINI_API_KEY not found in script properties. Please set it in Project Settings > Script Properties.');
+  }
+  return apiKey;
+}
+
 const SPREADSHEET_ID = "1tywu3sGDICGxyPxHivwVPCt2bpHyJIhtYPUQKuWITO8";
 const DRIVE_FOLDER_ID = "1IGClI04xLf7WFiZM6ojzmuNBG7erlP2r";
 const LOGO_DRIVE_LOCATION_ID = "1FYbk0LF7g1Cowp86WheyyJe0MyS87M-Q";
