@@ -7,13 +7,15 @@
 // Main Processing Waterfall & AI
 // =======================================================================
 
-function processSingleEmail(thread, state, rules) {
-  const message = thread.getMessages()[0];
-  if (!message) return;
-  
-  const sender = message.getFrom();
+function processSingleEmail(thread, messageData, state, rules) {
+  const headers = messageData.payload.headers;
+  const fromHeader = headers.find(h => h.name === 'From');
+  const subjectHeader = headers.find(h => h.name === 'Subject');
+
+  const sender = fromHeader ? fromHeader.value : 'Unknown Sender';
   const cleanSender = (sender.match(/<(.+)>/) || [])[1] || sender;
-  
+  const subject = subjectHeader ? subjectHeader.value : 'No Subject';
+
   if (applyRuleIfFound(thread, cleanSender, rules, state)) {
     state.totalProcessedCount++;
     return;
@@ -24,8 +26,8 @@ function processSingleEmail(thread, state, rules) {
   }
 
   state.apiCallCounts.gemini++;
-  const result = categorizeEmailWithGemini(message, thread);
-  
+  const result = categorizeEmailWithGemini(messageData, thread);
+
   result.applied.forEach(label => { if (state.labelCounts[label] !== undefined) state.labelCounts[label]++; });
 
   thread.moveToArchive();
@@ -34,17 +36,18 @@ function processSingleEmail(thread, state, rules) {
   state.processedInBatch++;
 }
 
-function categorizeEmailWithGemini(message, thread) {
+function categorizeEmailWithGemini(messageData, thread) {
   let outcome = { applied: [], reasoning: "N/A" };
   const GEMINI_API_KEY = getGeminiApiKey();
-  if (GEMINI_API_KEY === "YOUR_GEMINI_API_KEY_HERE") {
-    logInfo("Please set your API key in the 1_Config.gs file.");
-    return outcome;
-  }
-  const sender = message.getFrom();
+
+  const headers = messageData.payload.headers;
+  const fromHeader = headers.find(h => h.name === 'From');
+  const subjectHeader = headers.find(h => h.name === 'Subject');
+
+  const sender = fromHeader ? fromHeader.value : 'Unknown Sender';
   const cleanSender = (sender.match(/<(.+)>/) || [])[1] || sender;
-  const subject = message.getSubject();
-  const body = message.getPlainBody();
+  const subject = subjectHeader ? subjectHeader.value : 'No Subject';
+  const body = messageData.snippet;
 
   const endpoint = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${GEMINI_API_KEY}`;
   const prompt = getGeminiPrompt(MASTER_LABELS, sender, subject, body);
@@ -65,16 +68,16 @@ function categorizeEmailWithGemini(message, thread) {
     const rawText = geminiData.candidates[0].content.parts[0].text;
     const jsonText = rawText.replace(/```json/g, '').replace(/```/g, '').trim();
     const { primaryLabel, reasoning } = JSON.parse(jsonText);
-    
+
     outcome.reasoning = reasoning;
 
     if (primaryLabel && MASTER_LABELS.includes(primaryLabel)) {
-        const labelObj = GmailApp.getUserLabelByName(primaryLabel);
-        if (labelObj) {
-            thread.addLabel(labelObj);
-            outcome.applied.push(primaryLabel);
-            setCache(cleanSender, subject, primaryLabel, reasoning);
-        }
+      const labelObj = GmailApp.getUserLabelByName(primaryLabel);
+      if (labelObj) {
+        thread.addLabel(labelObj);
+        outcome.applied..push(primaryLabel);
+        setCache(cleanSender, subject, primaryLabel, reasoning);
+      }
     }
   } catch (e) {
     logError(`Critical Error processing Gemini response: ${e.toString()}`);
@@ -82,6 +85,7 @@ function categorizeEmailWithGemini(message, thread) {
 
   return outcome;
 }
+
 
 // =======================================================================
 // Rule & Cache Services

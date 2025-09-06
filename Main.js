@@ -64,32 +64,49 @@ function initializeState() {
 
 function processEmailBatches(state) {
   let lastBatchStartTime = state.startTime;
-  const rules = getRulesFromSheet(state); 
+  const rules = getRulesfromSheet(state);
 
   while (true) {
     if (checkSafetyLimits(state, lastBatchStartTime)) break;
-    
+
     lastBatchStartTime = new Date();
-    
+
     let searchQuery = "in:inbox -has:userlabels";
     if (!PROCESS_RECENT_MAIL) {
       searchQuery += " older_than:2d";
     }
     const threads = GmailApp.search(searchQuery, 0, BATCH_SIZE);
-    state.apiCallCounts.gmail++; 
-    
+    state.apiCallCounts.gmail++;
+
     if (threads.length === 0) {
       state.batchNumber--;
       break;
     }
 
+    // --- OPTIMIZATION START ---
+    const messages = threads.map(thread => thread.getMessages()[0]);
+    const messageIds = messages.map(message => message.getId());
+
+    // Batch fetch all message details in one API call
+    const requests = messageIds.map(id => ({
+      method: "GET",
+      endpoint: `https://www.googleapis.com/gmail/v1/users/me/messages/${id}?format=metadata`,
+      requestBody: {}
+    }));
+    const responses = Gmail.Users.Messages.batchGet({ ids: messageIds, format: "full" });
+    state.apiCallCounts.gmail++;
+    // --- OPTIMIZATION END ---
+
     state.processedInBatch = 0;
-    for (const thread of threads) {
-      processSingleEmail(thread, state, rules);
+    for (let i = 0; i < threads.length; i++) {
+      const thread = threads[i];
+      const messageData = responses.messages[i];
+      processSingleEmail(thread, messageData, state, rules);
     }
     if (threads.length < BATCH_SIZE) break;
   }
 }
+
 
 function finalizeRun(state) {
   const totalCallsThisRun = Object.values(state.apiCallCounts).reduce((sum, count) => sum + count, 0);
