@@ -1,1 +1,29 @@
-{}
+{
+  "timeZone": "America/Denver",
+  "dependencies": {},
+  "exceptionLogging": "STACKDRIVER",
+  "runtimeVersion": "V8",
+  "oauthScopes": [
+    "https://www.googleapis.com/auth/gmail.modify",
+    "https://www.googleapis.com/auth/gmail.addons.execute",
+    "https://www.googleapis.com/auth/script.external_request",
+    "https://www.googleapis.com/auth/script.scriptapp",
+    "https://www.googleapis.com/auth/spreadsheets",
+    "https://www.googleapis.com/auth/drive",
+    "https://www.googleapis.com/auth/calendar"
+  ],
+  "gmail": {
+    "name": "GeMail Companion",
+    "logoUrl": "https://drive.google.com/uc?export=view&id=1FYbk0LF7g1Cowp86WheyyJe0MyS87M-Q",
+    "homepageTrigger": {
+      "runFunction": "buildAddonCard"
+    },
+    "contextualTriggers": [
+      {
+        "unconditional": {},
+        "onTriggerFunction": "buildAddonCard"
+      }
+    ]
+  }
+}
+
