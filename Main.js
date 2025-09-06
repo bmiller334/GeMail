@@ -64,7 +64,7 @@ function initializeState() {
 
 function processEmailBatches(state) {
   let lastBatchStartTime = state.startTime;
-  const rules = getRulesfromSheet(state);
+  const rules = getRulesFromSheet(state);
 
   while (true) {
     if (checkSafetyLimits(state, lastBatchStartTime)) break;

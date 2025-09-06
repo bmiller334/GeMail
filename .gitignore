@@ -1,9 +1,2 @@
-#-*- mode: git-ignore -*-
-
-# Clasp credentials
-creds.json
-.clasprc.json
-
-# Node modules
-node_modules/
-npm-debug.log
+.clasp.json
+GUIDE.md
